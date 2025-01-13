@@ -116,13 +116,14 @@ def load_images(urls, plug_img_url, label_img_url):
 
 
 # Функция обработки изображений
-def process_images_data(images_data, plug_img_data, label_img_data):
+def process_images_data(images_data, plug_img_data, label_img_data, plug_saturation):
     """
     Обрабатывает массив данных изображений, учитывая их типы.
 
     :param images_data: Список данных изображений с типами и содержимым.
     :param plug_img_data: Данные изображения-заглушки (PIL.Image).
     :param label_img_data: Данные изображения-метки (PIL.Image).
+    :param plug_saturation: Насыщенность изображения-заглушки.
     :return: Список обработанных изображений (PIL.Image).
     """
     images = []
@@ -131,7 +132,7 @@ def process_images_data(images_data, plug_img_data, label_img_data):
     # Приводим цветовое пространство заглушки к RGB
     plug_img_data = plug_img_data.convert('RGB')
     # Уменьшаем насыщенность и яркость
-    plug_img_data = reduce_saturation(plug_img_data, factor=0.5)
+    plug_img_data = reduce_saturation(plug_img_data, factor=plug_saturation)
     # plug_img_data = reduce_brightness(plug_img_data, factor=0.8)
 
     for item in images_data:
@@ -216,9 +217,12 @@ def create_collage_by_blob():
         images_data = request.json.get('imagesData', [])
         plug_img_base64 = request.json.get('plugImgData', '')
         label_img_base64 = request.json.get('labelImgData', '')
-        collage_type = request.json.get('collageType', '')
-        # cols = int(request.json.get('cols', '3'))
-        # cols = int(request.json.get('cols', '3'))
+        # collage_type = request.json.get('collageType', '')
+        cols = int(request.json.get('cols', 3))
+        rows = int(request.json.get('rows', 3))
+        padding = int(request.json.get('lineWidth', 1))
+        plug_saturation = float(request.json.get('saturation', 1))
+
 
         # Проверка количества изображений
         # if len(images_data) != 9:
@@ -234,17 +238,18 @@ def create_collage_by_blob():
             label_img_data = Image.open(io.BytesIO(base64.b64decode(label_img_base64)))
 
         # Обработка изображений
-        images = process_images_data(images_data, plug_img_data, label_img_data)
+        images = process_images_data(images_data, plug_img_data, label_img_data, plug_saturation)
 
         # Определяем формат коллажа
-        collage_size = (3, 3)
-        if collage_type == 8:
-            collage_size = (2, 4)
-        elif collage_type == 4:
-            collage_size = (2, 2)
+        collage_size = (cols, rows)
+        # collage_size = (3, 3)
+        # if collage_type == 8:
+        #     collage_size = (2, 4)
+        # elif collage_type == 4:
+        #     collage_size = (2, 2)
 
         # Создаем коллаж
-        collage = create_collage(images, collage_size=collage_size)
+        collage = create_collage(images, collage_size=collage_size, padding=padding)
 
         # Сохранение в байтовый поток
         output = io.BytesIO()
