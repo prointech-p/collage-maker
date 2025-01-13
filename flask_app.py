@@ -221,7 +221,7 @@ def create_collage_by_blob():
         cols = int(request.json.get('cols', 3))
         rows = int(request.json.get('rows', 3))
         padding = int(request.json.get('lineWidth', 1))
-        plug_saturation = float(request.json.get('saturation', 1))
+        plug_saturation = float(request.json.get('plugSaturation', 1))
 
 
         # Проверка количества изображений
